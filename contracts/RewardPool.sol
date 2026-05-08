@@ -56,10 +56,9 @@ contract RewardPool {
     }
 
     // ─────────────────────────────────────────────
-    // SETUP — set staking contract once after deploy
+    // SETUP
     // ─────────────────────────────────────────────
 
-    /// @notice Called once after StakingContract is deployed
     function setStakingContract(address _staking) external onlyMultisig {
         require(!stakingSet, "RewardPool: already set");
         require(_staking != address(0), "RewardPool: invalid address");
@@ -69,21 +68,15 @@ contract RewardPool {
     }
 
     // ─────────────────────────────────────────────
-    // FUND — treasury sends WOLV into pool
+    // FUND & RELEASE
     // ─────────────────────────────────────────────
 
-    /// @notice Treasury approves then calls this to fund the reward pool
     function fund(uint256 amount) external {
         require(amount > 0, "RewardPool: zero amount");
         wolv.transferFrom(msg.sender, address(this), amount);
         emit Funded(msg.sender, amount);
     }
 
-    // ─────────────────────────────────────────────
-    // RELEASE — only staking contract can call this
-    // ─────────────────────────────────────────────
-
-    /// @notice StakingContract calls this when user claims rewards
     function release(address to, uint256 amount) external onlyStaking {
         require(amount > 0, "RewardPool: zero amount");
         require(wolv.balanceOf(address(this)) >= amount, "RewardPool: insufficient balance");
@@ -92,17 +85,12 @@ contract RewardPool {
     }
 
     // ─────────────────────────────────────────────
-    // VIEW
+    // VIEW & EMERGENCY
     // ─────────────────────────────────────────────
 
-    /// @notice Current WOLV balance in pool — publicly visible on BSCScan
     function poolBalance() external view returns (uint256) {
         return wolv.balanceOf(address(this));
     }
-
-    // ─────────────────────────────────────────────
-    // EMERGENCY — multisig can recover stuck tokens
-    // ─────────────────────────────────────────────
 
     function emergencyWithdraw(uint256 amount) external onlyMultisig {
         wolv.transfer(multisig, amount);
