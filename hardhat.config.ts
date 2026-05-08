@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [hardhatVerify, hardhatKeystore],
 
   // 2. Compiler Settings
-  solidity: "0.8.20",
+  solidity: "0.8.28",
 
   // 3. Network Configuration
   networks: {
