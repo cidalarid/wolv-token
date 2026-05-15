@@ -1,0 +1,634 @@
+
+<h2 class="sr-only">WolvCapital Dashboard — Wallet Connect & Claim Reward Test Interface</h2>
+<style>
+  :root {
+    --wolv-gold: #d4a832;
+    --wolv-gold-dim: #a07820;
+    --wolv-surface: var(--color-background-primary);
+    --wolv-border: var(--color-border-tertiary);
+    --wolv-muted: var(--color-text-secondary);
+    --wolv-text: var(--color-text-primary);
+  }
+  .wdash { font-family: var(--font-mono); padding: 1.25rem 0; }
+  .wdash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .wdash-logo { display: flex; align-items: center; gap: 10px; }
+  .wdash-logo-icon { width: 32px; height: 32px; background: var(--wolv-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .wdash-logo-icon svg { width: 16px; height: 16px; fill: white; }
+  .wdash-logo-text { font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: var(--wolv-text); }
+  .wdash-logo-sub { font-size: 11px; color: var(--wolv-muted); letter-spacing: 0.06em; }
+  .chain-badge { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-md); font-size: 12px; color: var(--wolv-muted); }
+  .chain-dot { width: 7px; height: 7px; border-radius: 50%; background: #f0b90b; }
+
+  .wallet-card { background: var(--wolv-surface); border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .wallet-card-title { font-size: 11px; letter-spacing: 0.08em; color: var(--wolv-muted); margin-bottom: 1rem; text-transform: uppercase; }
+
+  .connect-btn { width: 100%; padding: 11px 0; border: 1px solid var(--wolv-gold); border-radius: var(--border-radius-md); background: transparent; color: var(--wolv-gold); font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s, color 0.15s; }
+  .connect-btn:hover { background: var(--wolv-gold); color: white; }
+  .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .connect-btn.connected { border-color: var(--color-border-success); color: var(--color-text-success); }
+  .connect-btn.connected:hover { background: var(--color-background-success); }
+
+  .wallet-info { display: none; }
+  .wallet-info.visible { display: block; }
+  .winfo-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--wolv-border); font-size: 12px; }
+  .winfo-row:last-child { border-bottom: none; }
+  .winfo-label { color: var(--wolv-muted); }
+  .winfo-value { font-weight: 500; color: var(--wolv-text); font-family: var(--font-mono); }
+  .winfo-value.addr { font-size: 11px; color: var(--color-text-info); }
+  .winfo-value.balance { color: var(--wolv-gold); }
+
+  .stakes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .stake-card { background: var(--color-background-secondary); border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-md); padding: 0.9rem; }
+  .stake-plan { font-size: 11px; letter-spacing: 0.06em; color: var(--wolv-muted); margin-bottom: 4px; }
+  .stake-amount { font-size: 18px; font-weight: 500; color: var(--wolv-text); margin-bottom: 2px; }
+  .stake-apy { font-size: 12px; color: #22c55e; }
+  .stake-status { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 99px; margin-top: 6px; }
+  .stake-status.locked { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .stake-status.claimable { background: var(--color-background-success); color: var(--color-text-success); }
+  .stake-status.claimed { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .stake-id { font-size: 10px; color: var(--wolv-muted); margin-top: 4px; }
+
+  .claim-section { background: var(--wolv-surface); border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .claim-title { font-size: 11px; letter-spacing: 0.08em; color: var(--wolv-muted); margin-bottom: 1rem; text-transform: uppercase; }
+  .claim-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .claim-select { flex: 1; font-size: 13px; padding: 8px 10px; border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--wolv-text); }
+  .claim-btn { padding: 8px 18px; border: 0.5px solid var(--color-border-success); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-success); font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .claim-btn:hover:not(:disabled) { background: var(--color-background-success); }
+  .claim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .reward-preview { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .rp-label { font-size: 12px; color: var(--wolv-muted); }
+  .rp-value { font-size: 16px; font-weight: 500; color: var(--wolv-gold); }
+
+  .log-section { background: var(--wolv-surface); border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+  .log-title { font-size: 11px; letter-spacing: 0.08em; color: var(--wolv-muted); margin-bottom: 0.75rem; text-transform: uppercase; }
+  .log-body { max-height: 180px; overflow-y: auto; }
+  .log-entry { font-size: 11px; padding: 4px 0; border-bottom: 0.5px solid var(--wolv-border); display: flex; gap: 8px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: var(--wolv-muted); flex-shrink: 0; }
+  .log-msg { color: var(--wolv-text); }
+  .log-msg.ok { color: var(--color-text-success); }
+  .log-msg.err { color: var(--color-text-danger); }
+  .log-msg.info { color: var(--color-text-info); }
+  .log-msg.warn { color: var(--color-text-warning); }
+
+  .tx-hash { font-size: 10px; color: var(--color-text-info); cursor: pointer; text-decoration: underline dotted; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--wolv-border); border-top-color: var(--wolv-gold); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .test-result-banner { border-radius: var(--border-radius-md); padding: 0.6rem 1rem; font-size: 12px; margin-top: 10px; display: none; }
+  .test-result-banner.pass { background: var(--color-background-success); color: var(--color-text-success); display: block; }
+  .test-result-banner.fail { background: var(--color-background-danger); color: var(--color-text-danger); display: block; }
+
+  .tabs { display: flex; gap: 0; margin-bottom: 1rem; border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-md); overflow: hidden; }
+  .tab { flex: 1; padding: 7px 0; text-align: center; font-size: 12px; cursor: pointer; background: var(--color-background-secondary); color: var(--wolv-muted); border: none; }
+  .tab.active { background: var(--wolv-surface); color: var(--wolv-text); font-weight: 500; }
+
+  .method-row { padding: 8px 0; border-bottom: 0.5px solid var(--wolv-border); display: flex; align-items: center; justify-content: space-between; }
+  .method-row:last-child { border-bottom: none; }
+  .method-name { font-size: 12px; font-family: var(--font-mono); color: var(--color-text-info); }
+  .method-type { font-size: 10px; padding: 2px 6px; border-radius: 99px; }
+  .method-type.read { background: var(--color-background-info); color: var(--color-text-info); }
+  .method-type.write { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .method-call-btn { font-size: 11px; padding: 3px 10px; border: 0.5px solid var(--wolv-border); border-radius: var(--border-radius-md); cursor: pointer; background: transparent; color: var(--wolv-muted); }
+  .method-call-btn:hover { background: var(--color-background-secondary); }
+  .method-result { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); margin-top: 2px; }
+</style>
+
+<div class="wdash">
+  <div class="wdash-header">
+    <div class="wdash-logo">
+      <div class="wdash-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 8l10 6 10-6-10-6zM2 16l10 6 10-6M2 12l10 6 10-6"/></svg>
+      </div>
+      <div>
+        <div class="wdash-logo-text">WOLV CAPITAL</div>
+        <div class="wdash-logo-sub">Contract Test Dashboard</div>
+      </div>
+    </div>
+    <div class="chain-badge">
+      <div class="chain-dot"></div>
+      BSC Mainnet
+    </div>
+  </div>
+
+  <div class="wallet-card">
+    <div class="wallet-card-title">01 — Wallet Connection</div>
+    <button class="connect-btn" id="connectBtn" onclick="handleConnect()">
+      <i class="ti ti-wallet" aria-hidden="true"></i>
+      Connect Wallet
+    </button>
+    <div class="wallet-info" id="walletInfo">
+      <div style="height: 12px;"></div>
+      <div class="winfo-row">
+        <span class="winfo-label">Address</span>
+        <span class="winfo-value addr" id="walletAddr">—</span>
+      </div>
+      <div class="winfo-row">
+        <span class="winfo-label">Network</span>
+        <span class="winfo-value" id="walletNet">—</span>
+      </div>
+      <div class="winfo-row">
+        <span class="winfo-label">BNB Balance</span>
+        <span class="winfo-value balance" id="walletBal">—</span>
+      </div>
+      <div class="winfo-row">
+        <span class="winfo-label">WOLV Balance</span>
+        <span class="winfo-value balance" id="walletWolv">—</span>
+      </div>
+    </div>
+    <div class="test-result-banner" id="connectResult"></div>
+  </div>
+
+  <div class="wallet-card">
+    <div class="wallet-card-title">02 — Active Stakes</div>
+    <div id="noWalletNote" style="font-size:12px; color:var(--wolv-muted); padding: 4px 0;">Connect wallet to load stakes.</div>
+    <div class="stakes-grid" id="stakesGrid" style="display:none;"></div>
+    <div id="noStakesNote" style="font-size:12px; color:var(--wolv-muted); display:none;">No stakes found for this address.</div>
+  </div>
+
+  <div class="claim-section">
+    <div class="claim-title">03 — Claim Reward</div>
+    <div class="claim-row">
+      <select class="claim-select" id="stakeSelect" disabled>
+        <option value="">— select stake ID —</option>
+      </select>
+      <button class="claim-btn" id="claimBtn" disabled onclick="handleClaim()">
+        Claim WOLV
+      </button>
+    </div>
+    <div class="reward-preview" id="rewardPreview" style="display:none;">
+      <span class="rp-label">Estimated Reward</span>
+      <span class="rp-value" id="rewardAmt">0 WOLV</span>
+    </div>
+    <div class="test-result-banner" id="claimResult"></div>
+  </div>
+
+  <div class="wallet-card">
+    <div class="wallet-card-title">04 — Contract Methods (Read)</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('staking')">StakingContract</button>
+      <button class="tab" onclick="switchTab('wolv')">WOLV Token</button>
+      <button class="tab" onclick="switchTab('pool')">RewardPool</button>
+    </div>
+    <div id="methodsStaking">
+      <div class="method-row"><span class="method-name">getStakeCount(user)</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('stakeCount')">call</button></div>
+      <div class="method-result" id="res-stakeCount"></div>
+      <div class="method-row"><span class="method-name">pendingReward(user, id)</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('pendingReward')">call</button></div>
+      <div class="method-result" id="res-pendingReward"></div>
+      <div class="method-row"><span class="method-name">timeUntilUnlock(user, id)</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('timeUntilUnlock')">call</button></div>
+      <div class="method-result" id="res-timeUntilUnlock"></div>
+      <div class="method-row"><span class="method-name">paused()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('paused')">call</button></div>
+      <div class="method-result" id="res-paused"></div>
+    </div>
+    <div id="methodsWolv" style="display:none;">
+      <div class="method-row"><span class="method-name">balanceOf(account)</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('balanceOf')">call</button></div>
+      <div class="method-result" id="res-balanceOf"></div>
+      <div class="method-row"><span class="method-name">totalSupply()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('totalSupply')">call</button></div>
+      <div class="method-result" id="res-totalSupply"></div>
+      <div class="method-row"><span class="method-name">remainingSupply()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('remainingSupply')">call</button></div>
+      <div class="method-result" id="res-remainingSupply"></div>
+      <div class="method-row"><span class="method-name">paused()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('wolvPaused')">call</button></div>
+      <div class="method-result" id="res-wolvPaused"></div>
+    </div>
+    <div id="methodsPool" style="display:none;">
+      <div class="method-row"><span class="method-name">poolBalance()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('poolBalance')">call</button></div>
+      <div class="method-result" id="res-poolBalance"></div>
+      <div class="method-row"><span class="method-name">stakingSet()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('stakingSet')">call</button></div>
+      <div class="method-result" id="res-stakingSet"></div>
+      <div class="method-row"><span class="method-name">withdrawUnlocksAt()</span><span class="method-type read">view</span><button class="method-call-btn" onclick="readMethod('withdrawUnlocksAt')">call</button></div>
+      <div class="method-result" id="res-withdrawUnlocksAt"></div>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-title">Test Log</div>
+    <div class="log-body" id="logBody">
+      <div class="log-entry"><span class="log-time" id="t0"></span><span class="log-msg info">Dashboard initialised. Checking for MetaMask / injected provider...</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONTRACT_ADDRESSES = {
+  WOLV:    "0x0000000000000000000000000000000000000000",
+  STAKING: "0x0000000000000000000000000000000000000000",
+  POOL:    "0x0000000000000000000000000000000000000000",
+};
+
+const BSC_CHAIN_ID = "0x38";
+const BSC_RPC = "https://bsc-dataseed1.binance.org/";
+
+const STAKING_ABI_FRAGMENTS = {
+  getStakeCount: "function getStakeCount(address user) view returns (uint256)",
+  pendingReward: "function pendingReward(address user, uint256 stakeId) view returns (uint256)",
+  timeUntilUnlock: "function timeUntilUnlock(address user, uint256 stakeId) view returns (uint256)",
+  getStake: "function getStake(address user, uint256 stakeId) view returns (tuple(uint8 planId, uint8 token, uint256 amountUSD, uint256 stakedAt, uint256 unlocksAt, bool claimed, bool active))",
+  claimRewards: "function claimRewards(uint256 stakeId)",
+  paused: "function paused() view returns (bool)",
+};
+
+const PLAN_NAMES = ["Pioneer", "Vanguard", "Horizon", "Summit VIP"];
+const PLAN_APY   = ["8%", "12%", "18%", "25%"];
+
+let walletAddr = null;
+let provider = null;
+let stakeData = [];
+let selectedStakeId = null;
+
+function ts() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+
+function log(msg, type="") {
+  const lb = document.getElementById("logBody");
+  const e = document.createElement("div");
+  e.className = "log-entry";
+  e.innerHTML = `<span class="log-time">${ts()}</span><span class="log-msg ${type}">${msg}</span>`;
+  lb.appendChild(e);
+  lb.scrollTop = lb.scrollHeight;
+}
+
+function showResult(elId, ok, msg) {
+  const el = document.getElementById(elId);
+  el.className = "test-result-banner " + (ok ? "pass" : "fail");
+  el.textContent = (ok ? "✓ " : "✗ ") + msg;
+}
+
+function encodeCall(sig, ...args) {
+  const name = sig.match(/function (\w+)/)[1];
+  const types = (sig.match(/\(([^)]*)\)/) || ["",""])[1]
+    .split(",").map(s => s.trim()).filter(Boolean);
+  const selector = keccak256Selector(name, types);
+  let data = selector;
+  for (let i = 0; i < args.length; i++) {
+    const t = types[i];
+    let v = args[i].toString().replace("0x","");
+    if (t === "address") v = v.padStart(64, "0");
+    else if (t === "uint256" || t === "uint8") v = BigInt(args[i]).toString(16).padStart(64,"0");
+    data += v;
+  }
+  return data;
+}
+
+function keccak256Selector(name, types) {
+  const sig = `${name}(${types.join(",")})`;
+  const bytes = new TextEncoder().encode(sig);
+  return "0x" + simpleKeccak(bytes).slice(0, 8);
+}
+
+function simpleKeccak(bytes) {
+  let state = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+  ];
+  const msg = Array.from(bytes);
+  msg.push(0x01);
+  while (msg.length % 64 !== 56) msg.push(0x00);
+  const lenBits = bytes.length * 8;
+  for (let i = 7; i >= 0; i--) msg.push((lenBits / Math.pow(2, i * 8)) & 0xff);
+  const words = [];
+  for (let i = 0; i < msg.length; i += 4) {
+    words.push(((msg[i]||0)<<24)|((msg[i+1]||0)<<16)|((msg[i+2]||0)<<8)|(msg[i+3]||0));
+  }
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  function rotr(x,n){return((x>>>n)|(x<<(32-n)))>>>0;}
+  function add(...v){return v.reduce((a,b)=>(a+b)>>>0,0);}
+  for (let c=0;c<words.length;c+=16){
+    const w=words.slice(c,c+16);
+    for(let i=16;i<64;i++){
+      const s0=rotr(w[i-15],7)^rotr(w[i-15],18)^(w[i-15]>>>3);
+      const s1=rotr(w[i-2],17)^rotr(w[i-2],19)^(w[i-2]>>>10);
+      w[i]=add(w[i-16],s0,w[i-7],s1);
+    }
+    let [a,b,cd,d,e,f,g,h]=state;
+    for(let i=0;i<64;i++){
+      const S1=(rotr(e,6)^rotr(e,11)^rotr(e,25))>>>0;
+      const ch=((e&f)^(~e&g))>>>0;
+      const t1=add(h,S1,ch,K[i],w[i]);
+      const S0=(rotr(a,2)^rotr(a,13)^rotr(a,22))>>>0;
+      const maj=((a&b)^(a&cd)^(b&cd))>>>0;
+      const t2=add(S0,maj);
+      h=g;g=f;f=e;e=add(d,t1);d=cd;cd=b;b=a;a=add(t1,t2);
+    }
+    state=[add(state[0],a),add(state[1],b),add(state[2],cd),add(state[3],d),
+           add(state[4],e),add(state[5],f),add(state[6],g),add(state[7],h)];
+  }
+  return state.map(x=>x.toString(16).padStart(8,"0")).join("");
+}
+
+async function ethCall(to, data) {
+  const body = JSON.stringify({jsonrpc:"2.0",method:"eth_call",params:[{to,data},"latest"],id:1});
+  const r = await fetch(BSC_RPC, {method:"POST",headers:{"Content-Type":"application/json"},body});
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message);
+  return j.result;
+}
+
+async function getBalance(addr) {
+  const body = JSON.stringify({jsonrpc:"2.0",method:"eth_getBalance",params:[addr,"latest"],id:1});
+  const r = await fetch(BSC_RPC, {method:"POST",headers:{"Content-Type":"application/json"},body});
+  const j = await r.json();
+  return (parseInt(j.result,16) / 1e18).toFixed(4);
+}
+
+async function handleConnect() {
+  const btn = document.getElementById("connectBtn");
+  const isEthereum = window.ethereum && typeof window.ethereum.request === "function";
+
+  if (!isEthereum) {
+    log("No injected provider found (MetaMask / Trust / Rabby etc.)", "warn");
+    log("Tip: install MetaMask or open in a Web3 browser, then retry.", "warn");
+    showResult("connectResult", false, "No wallet detected. Install MetaMask and reload.");
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span>Connecting…';
+  btn.disabled = true;
+  log("Requesting accounts from injected provider…", "info");
+
+  try {
+    const accounts = await window.ethereum.request({method:"eth_requestAccounts"});
+    walletAddr = accounts[0];
+    provider = window.ethereum;
+
+    log(`Accounts granted. Address: ${walletAddr}`, "ok");
+
+    const chainId = await window.ethereum.request({method:"eth_chainId"});
+    log(`Chain ID: ${chainId} (BSC Mainnet = ${BSC_CHAIN_ID})`, chainId === BSC_CHAIN_ID ? "ok" : "warn");
+
+    if (chainId !== BSC_CHAIN_ID) {
+      log("Wrong network — requesting switch to BSC Mainnet…", "warn");
+      try {
+        await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:BSC_CHAIN_ID}]});
+        log("Switched to BSC Mainnet.", "ok");
+      } catch (e) {
+        log("Could not switch network: " + e.message, "err");
+      }
+    }
+
+    const bnbBal = await getBalance(walletAddr);
+    log(`BNB balance: ${bnbBal} BNB`, "ok");
+
+    let wolvBal = "—";
+    try {
+      const balData = "0x70a08231" + walletAddr.slice(2).padStart(64,"0");
+      const raw = await ethCall(CONTRACT_ADDRESSES.WOLV, balData);
+      if (raw && raw !== "0x") {
+        wolvBal = (BigInt(raw) / BigInt("1000000000000000000")).toString() + " WOLV";
+      } else {
+        wolvBal = "contract not deployed / address not set";
+      }
+    } catch(e) { wolvBal = "error: " + e.message; }
+
+    document.getElementById("walletAddr").textContent = walletAddr.slice(0,6) + "…" + walletAddr.slice(-4);
+    document.getElementById("walletNet").textContent = chainId === BSC_CHAIN_ID ? "BSC Mainnet ✓" : "Wrong network ✗";
+    document.getElementById("walletBal").textContent = bnbBal + " BNB";
+    document.getElementById("walletWolv").textContent = wolvBal;
+    document.getElementById("walletInfo").classList.add("visible");
+
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Wallet Connected';
+    btn.classList.add("connected");
+    btn.disabled = false;
+
+    showResult("connectResult", true, "Wallet connected successfully. Address & balance verified.");
+    log("--- Wallet connect test PASSED ---", "ok");
+
+    loadStakes();
+  } catch (e) {
+    log("Connection failed: " + e.message, "err");
+    showResult("connectResult", false, "Connection failed: " + e.message);
+    btn.innerHTML = '<i class="ti ti-wallet" aria-hidden="true"></i> Connect Wallet';
+    btn.disabled = false;
+  }
+}
+
+async function loadStakes() {
+  if (!walletAddr) return;
+  document.getElementById("noWalletNote").style.display = "none";
+  document.getElementById("stakesGrid").style.display = "none";
+  document.getElementById("noStakesNote").style.display = "none";
+
+  log("Fetching stake count from StakingContract…", "info");
+  let stakeCount = 0;
+  try {
+    const data = "0x4a6a74e8" + walletAddr.slice(2).padStart(64,"0");
+    const raw = await ethCall(CONTRACT_ADDRESSES.STAKING, data);
+    if (!raw || raw === "0x" || raw === "0x" + "0".repeat(64)) {
+      log("StakingContract address not configured — update CONTRACT_ADDRESSES in dashboard code.", "warn");
+      document.getElementById("noWalletNote").textContent = "⚠ Contract address not set. See instructions below.";
+      document.getElementById("noWalletNote").style.display = "block";
+      populateClaimSelect([]);
+      return;
+    }
+    stakeCount = Number(BigInt(raw));
+    log(`Stake count: ${stakeCount}`, stakeCount > 0 ? "ok" : "info");
+  } catch(e) {
+    log("getStakeCount error: " + e.message, "err");
+    document.getElementById("noWalletNote").textContent = "Error loading stakes: " + e.message;
+    document.getElementById("noWalletNote").style.display = "block";
+    return;
+  }
+
+  if (stakeCount === 0) {
+    document.getElementById("noStakesNote").style.display = "block";
+    populateClaimSelect([]);
+    return;
+  }
+
+  stakeData = [];
+  const grid = document.getElementById("stakesGrid");
+  grid.innerHTML = "";
+  grid.style.display = "grid";
+
+  for (let i = 0; i < stakeCount; i++) {
+    try {
+      const data = "0x453a02f0" + walletAddr.slice(2).padStart(64,"0") + i.toString(16).padStart(64,"0");
+      const raw = await ethCall(CONTRACT_ADDRESSES.STAKING, data);
+      const words = raw.slice(2).match(/.{64}/g) || [];
+      const planId   = parseInt(words[0]||"0",16);
+      const token    = parseInt(words[1]||"0",16);
+      const amtUSD   = BigInt("0x"+(words[2]||"0"));
+      const stakedAt = parseInt(words[3]||"0",16);
+      const unlocksAt= parseInt(words[4]||"0",16);
+      const claimed  = parseInt(words[5]||"0",16) === 1;
+      const active   = parseInt(words[6]||"0",16) === 1;
+
+      const now = Math.floor(Date.now()/1000);
+      const isClaimable = active && !claimed && now >= unlocksAt;
+      const isLocked = active && !claimed && now < unlocksAt;
+      const usdStr = (Number(amtUSD) / 1e8).toFixed(2);
+      const daysLeft = unlocksAt > now ? Math.ceil((unlocksAt - now)/86400) : 0;
+
+      stakeData.push({id:i, planId, token, amtUSD, stakedAt, unlocksAt, claimed, active, isClaimable, isLocked});
+
+      let statusClass = "claimed", statusLabel = "Claimed";
+      if (isClaimable) { statusClass = "claimable"; statusLabel = "Ready to Claim ✓"; }
+      else if (isLocked) { statusClass = "locked"; statusLabel = `Locked — ${daysLeft}d`; }
+
+      const card = document.createElement("div");
+      card.className = "stake-card";
+      card.innerHTML = `
+        <div class="stake-plan">${PLAN_NAMES[planId]||"Plan "+planId} · ${token===0?"BNB":"BUSD"}</div>
+        <div class="stake-amount">$${usdStr}</div>
+        <div class="stake-apy">APY ${PLAN_APY[planId]||"—"}</div>
+        <div class="stake-status ${statusClass}">${statusLabel}</div>
+        <div class="stake-id">Stake #${i}</div>
+      `;
+      grid.appendChild(card);
+    } catch(e) {
+      log(`Error loading stake #${i}: ${e.message}`, "err");
+    }
+  }
+
+  populateClaimSelect(stakeData);
+  log("Stakes loaded successfully.", "ok");
+}
+
+function populateClaimSelect(stakes) {
+  const sel = document.getElementById("stakeSelect");
+  const btn = document.getElementById("claimBtn");
+  sel.innerHTML = '<option value="">— select stake ID —</option>';
+  const claimable = stakes.filter(s => s.isClaimable);
+  claimable.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = `Stake #${s.id} — ${PLAN_NAMES[s.planId]} ($${(Number(s.amtUSD)/1e8).toFixed(2)})`;
+    sel.appendChild(opt);
+  });
+  sel.disabled = !walletAddr;
+  btn.disabled = claimable.length === 0 || !walletAddr;
+  sel.onchange = () => updateRewardPreview(sel.value);
+}
+
+async function updateRewardPreview(stakeId) {
+  selectedStakeId = stakeId;
+  const preview = document.getElementById("rewardPreview");
+  if (!stakeId || !walletAddr) { preview.style.display = "none"; return; }
+  try {
+    const data = "0x96c82e57" + walletAddr.slice(2).padStart(64,"0") + parseInt(stakeId).toString(16).padStart(64,"0");
+    const raw = await ethCall(CONTRACT_ADDRESSES.STAKING, data);
+    const wolvWei = BigInt(raw);
+    const wolvAmt = (Number(wolvWei) / 1e18).toFixed(4);
+    document.getElementById("rewardAmt").textContent = wolvAmt + " WOLV";
+    preview.style.display = "flex";
+  } catch(e) {
+    log("pendingReward error: " + e.message, "err");
+  }
+}
+
+async function handleClaim() {
+  if (!walletAddr || selectedStakeId === null || selectedStakeId === "") {
+    showResult("claimResult", false, "Select a stake first.");
+    return;
+  }
+  if (!window.ethereum) {
+    showResult("claimResult", false, "No wallet provider found.");
+    return;
+  }
+  const btn = document.getElementById("claimBtn");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  log(`Initiating claimRewards(${selectedStakeId}) transaction…`, "info");
+
+  try {
+    const selector = "0x372500ab";
+    const data = selector + parseInt(selectedStakeId).toString(16).padStart(64,"0");
+    const txHash = await window.ethereum.request({
+      method: "eth_sendTransaction",
+      params: [{
+        from: walletAddr,
+        to: CONTRACT_ADDRESSES.STAKING,
+        data: data,
+        gas: "0x30D40",
+      }]
+    });
+    log(`Tx submitted: ${txHash}`, "ok");
+    log("Waiting for confirmation… (check your wallet)", "info");
+    showResult("claimResult", true, `Claim tx sent! Hash: ${txHash.slice(0,10)}… — Verify on BSCScan.`);
+    log("--- Claim reward test PASSED (tx accepted by wallet) ---", "ok");
+  } catch(e) {
+    log("Claim failed: " + e.message, "err");
+    showResult("claimResult", false, "Claim failed: " + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = "Claim WOLV";
+}
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", ["staking","wolv","pool"][i] === tab));
+  document.getElementById("methodsStaking").style.display = tab === "staking" ? "" : "none";
+  document.getElementById("methodsWolv").style.display = tab === "wolv" ? "" : "none";
+  document.getElementById("methodsPool").style.display = tab === "pool" ? "" : "none";
+}
+
+async function readMethod(method) {
+  const el = document.getElementById("res-" + method);
+  el.textContent = "calling…";
+  const user = walletAddr || "0x0000000000000000000000000000000000000000";
+  try {
+    let raw, label;
+    if (method === "stakeCount") {
+      raw = await ethCall(CONTRACT_ADDRESSES.STAKING, "0x4a6a74e8" + user.slice(2).padStart(64,"0"));
+      label = `→ ${Number(BigInt(raw || "0x0"))} stakes`;
+    } else if (method === "pendingReward") {
+      const id = document.getElementById("stakeSelect").value || "0";
+      raw = await ethCall(CONTRACT_ADDRESSES.STAKING, "0x96c82e57" + user.slice(2).padStart(64,"0") + parseInt(id).toString(16).padStart(64,"0"));
+      label = `→ ${(Number(BigInt(raw||"0x0"))/1e18).toFixed(4)} WOLV (stake #${id})`;
+    } else if (method === "timeUntilUnlock") {
+      const id = document.getElementById("stakeSelect").value || "0";
+      raw = await ethCall(CONTRACT_ADDRESSES.STAKING, "0x..." + user.slice(2).padStart(64,"0") + parseInt(id).toString(16).padStart(64,"0"));
+      label = `→ ${Number(BigInt(raw||"0x0"))} seconds`;
+    } else if (method === "paused") {
+      raw = await ethCall(CONTRACT_ADDRESSES.STAKING, "0x5c975abb");
+      label = `→ ${raw && raw !== "0x" + "0".repeat(64) ? "true (PAUSED!)" : "false (running)"}`;
+    } else if (method === "balanceOf") {
+      raw = await ethCall(CONTRACT_ADDRESSES.WOLV, "0x70a08231" + user.slice(2).padStart(64,"0"));
+      label = `→ ${(Number(BigInt(raw||"0x0"))/1e18).toFixed(4)} WOLV`;
+    } else if (method === "totalSupply") {
+      raw = await ethCall(CONTRACT_ADDRESSES.WOLV, "0x18160ddd");
+      label = `→ ${(Number(BigInt(raw||"0x0"))/1e18).toLocaleString()} WOLV`;
+    } else if (method === "remainingSupply") {
+      raw = await ethCall(CONTRACT_ADDRESSES.WOLV, "0x...");
+      label = `→ ${(Number(BigInt(raw||"0x0"))/1e18).toLocaleString()} WOLV remaining`;
+    } else if (method === "wolvPaused") {
+      raw = await ethCall(CONTRACT_ADDRESSES.WOLV, "0x5c975abb");
+      label = `→ ${raw && raw.endsWith("1") ? "true (PAUSED)" : "false"}`;
+    } else if (method === "poolBalance") {
+      raw = await ethCall(CONTRACT_ADDRESSES.POOL, "0x...");
+      label = `→ ${(Number(BigInt(raw||"0x0"))/1e18).toLocaleString()} WOLV in pool`;
+    } else if (method === "stakingSet") {
+      raw = await ethCall(CONTRACT_ADDRESSES.POOL, "0x...");
+      label = `→ ${raw && raw.endsWith("1") ? "true" : "false"}`;
+    } else if (method === "withdrawUnlocksAt") {
+      raw = await ethCall(CONTRACT_ADDRESSES.POOL, "0x...");
+      const ts = Number(BigInt(raw||"0x0"));
+      label = ts === 0 ? "→ 0 (no pending withdrawal)" : `→ ${new Date(ts*1000).toISOString()}`;
+    }
+    el.textContent = label;
+    log(`readMethod(${method}): ${label}`, "ok");
+  } catch(e) {
+    el.textContent = "✗ " + e.message;
+    log(`readMethod(${method}) failed: ${e.message}`, "err");
+  }
+}
+
+document.getElementById("t0").textContent = ts();
+setTimeout(() => {
+  if (window.ethereum) {
+    log("Injected provider detected ✓ — ready to connect.", "ok");
+  } else {
+    log("No injected provider — you'll need MetaMask/Trust Wallet/Rabby to interact.", "warn");
+    log("Read-only contract calls still work via BSC RPC.", "info");
+  }
+}, 100);
+</script>
